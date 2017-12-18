@@ -1,0 +1,8 @@
+## Interface: 70300
+## Title: LiteSync
+## Version: @project-version@
+## Author: Xodiv of Proudmoore
+## Email: mib@post.com
+## SavedVariables: LiteSyncDB
+
+DB.lua
