@@ -38,6 +38,7 @@ function DB:Initialize()
     self:UpdateEquipped()
     self:UpdateBags()
     self:UpdateMoney()
+    self:UpdateCurrency()
 end
 
 function DB:Store(key, item)
@@ -211,7 +212,7 @@ function DB:UpdateAuctions()
     end
 end
 
-function DB:UpdateCurrencies()
+function DB:UpdateCurrency()
     local collapseMe = { }
     local i, limit = 1, GetCurrencyListSize()
     local category
@@ -227,6 +228,7 @@ function DB:UpdateCurrencies()
         else
             self:StorePlayer({ 'currency', name }, { id=id, name=name, category=category, amount=amount })
         end
+        i = i + 1
         limit = GetCurrencyListSize()
     end
 
