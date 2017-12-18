@@ -218,7 +218,7 @@ function DB:UpdateCurrency()
     local category
 
     while i <= limit do
-        local name, isHeader, isExpanded, _, _, count = GetCurrencyListInfo(i)
+        local name, isHeader, isExpanded, _, _, amount = GetCurrencyListInfo(i)
         if isHeader then
             category = name
             if not isExpanded then
