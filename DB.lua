@@ -1,3 +1,9 @@
+--[[----------------------------------------------------------------------------
+
+    LiteSync DB
+
+----------------------------------------------------------------------------]]--
+
 local DB = CreateFrame('Frame', 'LiteSync', UIParent)
 
 DB:SetScript('OnEvent',
@@ -10,7 +16,9 @@ local function SplitHyperlink(link)
     return link:match("|H(.+)|h(.*)|h")
 end
 
-local function GetItemTypeFromHyperlink(link)
+local function GetItemDetailFromHyperlink(link)
+    local id, rest, name = link:match("|H(.-:%d+)(.-)|h%[(.*)%]|h")
+    return id, id..':'..rest, name
 end
 
 function DB:PLAYER_LOGIN()
@@ -42,7 +50,6 @@ function DB:Initialize()
 end
 
 function DB:Store(key, item)
-    self.db.player = self.db.player or {}
     local cur = self.db
     
     for i,k in ipairs(key) do
@@ -86,7 +93,7 @@ function DB:UpdateEquipped()
         local key = { 'equipped', i }
 		if id then
             local link = GetInventoryItemLink("player", i)
-            self:StorePlayer(key, { count=1, link=SplitHyperlink(link), id=id })
+            self:StorePlayer(key, { count=1, link=SplitHyperlink(link), id='item:'..id })
         else
             self:StorePlayer(key, nil)
 		end
@@ -146,8 +153,9 @@ function DB:UpdateBagContainer(where, bag)
         local key = { where, bag, slot }
         local _, count, _, _, _, _, link = GetContainerItemInfo(bag, slot)
         if link then
-            local id = GetItemInfoFromHyperlink(link)
-            self:StorePlayer(key, { id=id, count=count, link=SplitHyperlink(link) })
+            local id, itemString, name = GetItemDetailFromHyperlink(link)
+            if id:match('^keystone') then id = 'item:138019' end
+            self:StorePlayer(key, { id=id, count=count, link=itemString })
         else
             self:StorePlayer(key, nil)
         end
@@ -183,7 +191,8 @@ function DB:UpdateMail()
             local _, id, _, count = GetInboxItem(mailIndex, i)
             if id then
                 local link = GetInboxItemLink(mailIndex, i)
-                self:StorePlayer(key, { id=id, count=count, link=SplitHyperlink(link) })
+                local id, itemString, name = GetItemDetailFromHyperlink(link)
+                self:StorePlayer(key, { id=id, count=count, link=itemString })
             else
                 self:StorePlayer(key, nil)
             end
@@ -200,11 +209,13 @@ local timeLeftData = {
 
 function DB:UpdateAuctions()
     for i = 1, GetNumAuctionItems('owner') do
-        local _, _, count, _, _, _, _, _, _, _, _, _, _, _, _, _, _, id = GetAuctionItemInfo("owner", i)
+        local _, _, count  = GetAuctionItemInfo("owner", i)
         if count then
             local link = GetAuctionItemLink("owner", i)
             local timeIndex = GetAuctionItemTimeLeft("owner", i)
             local expires = time() + timeLeftData[timeIndex].max
+            local id, itemString, name = GetItemDetailFromHyperlink(link)
+            self:StorePlayer(key, { id=id, count=count, link=itemString })
             self:StorePlayer({ 'auction', i }, { id=id, count=count, link=SplitHyperlink(link), expires=expires })
         else
             self:StorePlayer({ 'auction', i }, nil)
